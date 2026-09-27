@@ -75,7 +75,8 @@ export function About() {
             </section>
 
             <section className="relative grid grid-cols-12 gap-4 overflow-x-clip px-4 py-24 md:px-6">
-                <ScrollShape name="burst" color="#c9a2ff" turns={540} className="-left-[8vw] bottom-[10%] w-[16vw]" />
+                <ScrollShape name="flower" color="#dcf26b" turns={720} className="-right-[8vw] top-[42%] w-[14vw]" />
+                <ScrollShape name="burst" color="#c9a2ff" turns={-720} className="-left-[7vw] bottom-[6%] w-[16vw]" />
                 <div className="relative col-span-12 md:sticky md:top-24 md:col-span-5 md:self-start" data-cursor="Poke">
                     <div className="border border-ink p-6">
                         <LiquidMedia

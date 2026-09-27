@@ -27,7 +27,7 @@ export function Footer() {
                     strength={28}
                     interactionRadius={260}
                 />
-                <ScrollShape name="orb" color="#ece9e1" turns={-540} className="-right-[12vw] top-[6vh] w-[30vw] opacity-25" wobble={false} />
+                <ScrollShape name="orb" color="#dcf26b" turns={-720} className="-right-[10vw] top-[10vh] w-[34vw] opacity-60" wobble={false} />
                 <div className="pointer-events-none relative grid min-h-[100svh] grid-rows-[1fr_auto] gap-10 px-4 pb-4 pt-32 md:px-6">
                     <div className="grid grid-cols-12 gap-4">
                         <span className="label col-span-12 text-paper/60 md:col-span-3">(07) — Contact</span>
@@ -62,6 +62,7 @@ export function Footer() {
                             <TextBounce render={<span />} distance={70} rotation={40}>
                                 Ethanol
                             </TextBounce>
+                            <ScrollShape name="burst" color="#ff5fae" turns={900} className="relative ml-[1vw] inline-block w-[8vw] align-top" />
                         </h2>
                         <div className="label mt-4 flex justify-between text-paper/50">
                             <span>Ethan Z. Lalla ©{new Date().getFullYear()}</span>

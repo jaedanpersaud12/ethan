@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion, useMotionValue, useSpring } from "motion/react"
 import { useEffect, useState } from "react"
+import { ScrollShape } from "@/components/custom/shapes"
 import { WORKS } from "@/lib/works"
 
 /*
@@ -28,9 +29,10 @@ export function IndexList() {
 
     return (
         <section className="px-4 pb-32 md:px-6">
-                        <header className="mb-8 grid grid-cols-12 items-end gap-4 border-t border-ink pt-3">
-                <span className="label col-span-12 md:col-span-3">(02) — Work, {WORKS.length} pieces</span>
-                <h2 className="display col-span-12 text-[12vw] md:col-span-9 md:text-[7vw]">Index</h2>
+            <header className="relative mb-8 grid grid-cols-12 items-end gap-4 border-t border-ink pt-3">
+                <ScrollShape name="orb" color="#0c0c0b" turns={-540} className="bottom-[-1vw] right-[3vw] hidden w-[13vw] md:block" wobble={false} />
+                <span className="label relative col-span-12 md:col-span-3">(02) — Work, {WORKS.length} pieces</span>
+                <h2 className="display relative col-span-12 text-[12vw] md:col-span-9 md:text-[7vw]">Index</h2>
             </header>
 
             <ul
