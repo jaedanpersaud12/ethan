@@ -14,7 +14,7 @@ export function ArchiveSphere() {
     const work = active !== null ? ALL[active % ALL.length] : null
 
     return (
-        <section className="h-[100svh] overflow-hidden bg-ink text-paper" data-cursor={active === null ? "Drag" : undefined}>
+        <section className="h-[100svh] overflow-hidden bg-ink text-paper">
             <FluidDistortion
                 intensity={3}
                 distortion={0.9}

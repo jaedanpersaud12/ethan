@@ -1,40 +1,48 @@
 "use client"
 
-import { motion, useMotionValue, useSpring } from "motion/react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef } from "react"
 
-/* Blend-mode cursor that grows and labels itself over [data-cursor] targets. */
+/*
+ * Blend-mode dot cursor. Position is written straight to the transform on
+ * every pointer event (no spring, no React state), so it never trails the
+ * real pointer. Only the size change over links is animated, in CSS.
+ */
 export function Cursor() {
-    const x = useMotionValue(-100)
-    const y = useMotionValue(-100)
-    const sx = useSpring(x, { stiffness: 600, damping: 40, mass: 0.4 })
-    const sy = useSpring(y, { stiffness: 600, damping: 40, mass: 0.4 })
-    const [label, setLabel] = useState<string | null>(null)
-    const [link, setLink] = useState(false)
+    const ref = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        const move = (e: PointerEvent) => {
-            x.set(e.clientX)
-            y.set(e.clientY)
-            const t = e.target as HTMLElement | null
-            const tagged = t?.closest<HTMLElement>("[data-cursor]")
-            setLabel(tagged?.dataset.cursor ?? null)
-            setLink(!!t?.closest("a,button"))
-        }
-        window.addEventListener("pointermove", move)
-        return () => window.removeEventListener("pointermove", move)
-    }, [x, y])
+        const el = ref.current
+        if (!el || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return
+        document.documentElement.classList.add("has-cursor")
 
-    const size = label ? 96 : link ? 44 : 14
+        const move = (e: PointerEvent) => {
+            el.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`
+            el.style.opacity = "1"
+        }
+        const over = (e: PointerEvent) => {
+            const t = e.target as Element | null
+            el.dataset.hover = t?.closest("a, button, [role='button']") ? "link" : ""
+        }
+        const leave = () => (el.style.opacity = "0")
+
+        window.addEventListener("pointermove", move, { passive: true })
+        window.addEventListener("pointerover", over, { passive: true })
+        document.documentElement.addEventListener("pointerleave", leave)
+        return () => {
+            document.documentElement.classList.remove("has-cursor")
+            window.removeEventListener("pointermove", move)
+            window.removeEventListener("pointerover", over)
+            document.documentElement.removeEventListener("pointerleave", leave)
+        }
+    }, [])
+
     return (
-        <motion.div
+        <div
+            ref={ref}
             aria-hidden
-            className="pointer-events-none fixed left-0 top-0 z-[100] hidden items-center justify-center rounded-full bg-white mix-blend-difference [@media(hover:hover)]:flex"
-            style={{ x: sx, y: sy, translate: "-50% -50%" }}
-            animate={{ width: size, height: size }}
-            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="cursor pointer-events-none fixed left-0 top-0 z-[100] opacity-0 mix-blend-difference"
         >
-            {label && <span className="label text-[10px] text-black">{label}</span>}
-        </motion.div>
+            <span />
+        </div>
     )
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { ChromeFlow } from "@/components/custom/chrome-flow"
+import { DitherField } from "@/components/custom/dither-field"
 import { ScrollShape } from "@/components/custom/shapes"
 import { EdgeBounce } from "@/components/edge-bounce/edge-bounce"
 import { LiquidMedia } from "@/components/liquid-media/liquid-media"
@@ -54,30 +54,31 @@ export function About() {
     return (
         <>
             <section className="relative min-h-[100svh] overflow-hidden">
-                <ChromeFlow className="absolute inset-0" colors={["#c9a2ff", "#8fd3ff", "#dcf26b", "#f4d35e"]} dotSize={5} fadeEdge={0.55} fadeWidth={0.3} />
-                <div className="relative z-10 grid min-h-[100svh] grid-cols-12 items-end gap-4 px-4 pb-6 pt-32 md:px-6">
-                    <h1 className="display col-span-12 text-[10vw] text-paper md:col-span-8 md:text-[6.5vw]">
-                        Some things
-                        <br />
-                        <span className="font-serif normal-case italic tracking-normal">about me</span> :)
-                    </h1>
-                    <dl className="label col-span-12 grid grid-cols-2 gap-x-4 gap-y-3 text-paper md:col-span-4">
-                        {STATS.map(([k, v]) => (
-                            <div key={k} className="border-t border-paper/30 pt-2">
-                                <dt className="opacity-60">{k}</dt>
-                                <dd className="display text-[4.5vw] md:text-[1.4vw]">
-                                    <TextScramble>{v}</TextScramble>
-                                </dd>
-                            </div>
-                        ))}
-                    </dl>
-                </div>
+                <DitherField className="relative min-h-[100svh]" colors={["#c9a2ff", "#8fd3ff", "#dcf26b", "#f4d35e"]}>
+                    <div className="relative z-10 grid min-h-[100svh] grid-cols-12 items-end gap-4 px-4 pb-6 pt-32 md:px-6">
+                        <h1 data-calm="18" className="display col-span-12 self-end text-[10vw] md:col-span-8 md:text-[6.5vw] text-ink">
+                            Some things
+                            <br />
+                            <span className="font-serif font-normal normal-case italic tracking-normal">about me</span> :)
+                        </h1>
+                        <dl data-calm="14" className="label col-span-12 grid grid-cols-2 gap-x-4 gap-y-3 text-ink md:col-span-4">
+                            {STATS.map(([k, v]) => (
+                                <div key={k} className="border-t border-ink/30 pt-2">
+                                    <dt className="opacity-60">{k}</dt>
+                                    <dd className="display text-[4.5vw] md:text-[1.4vw]">
+                                        <TextScramble>{v}</TextScramble>
+                                    </dd>
+                                </div>
+                            ))}
+                        </dl>
+                    </div>
+                </DitherField>
             </section>
 
             <section className="relative grid grid-cols-12 gap-4 overflow-x-clip px-4 py-24 md:px-6">
                 <ScrollShape name="flower" color="#dcf26b" turns={720} className="-right-[8vw] top-[42%] w-[14vw]" />
                 <ScrollShape name="burst" color="#c9a2ff" turns={-720} className="-left-[7vw] bottom-[6%] w-[16vw]" />
-                <div className="relative col-span-12 md:sticky md:top-24 md:col-span-5 md:self-start" data-cursor="Poke">
+                <div className="relative col-span-12 md:sticky md:top-24 md:col-span-5 md:self-start">
                     <div className="border border-ink p-6">
                         <LiquidMedia
                             type="image"
@@ -157,7 +158,7 @@ export function About() {
                 </div>
             </section>
 
-            <section className="relative flex h-[80vh] items-center justify-center overflow-hidden bg-ink text-paper" data-cursor="Paint">
+            <section className="relative flex h-[80vh] items-center justify-center overflow-hidden bg-ink text-paper">
                 <PixelTrail
                     className="absolute inset-0 h-full w-full"
                     color="#dcf26b"

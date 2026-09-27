@@ -17,6 +17,14 @@ export function IndexList() {
     const sx = useSpring(x, { stiffness: 300, damping: 30, mass: 0.5 })
     const sy = useSpring(y, { stiffness: 300, damping: 30, mass: 0.5 })
 
+    // Scrolling moves the list out from under a still pointer without a
+    // pointerleave, so drop the preview on scroll; moving re-activates it.
+    useEffect(() => {
+        const clear = () => setActive(null)
+        window.addEventListener("scroll", clear, { passive: true })
+        return () => window.removeEventListener("scroll", clear)
+    }, [])
+
     useEffect(() => {
         if (open === null) return
         const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(null)
@@ -50,9 +58,9 @@ export function IndexList() {
                             <button
                                 type="button"
                                 onPointerEnter={() => setActive(i)}
+                                onPointerMove={() => active !== i && setActive(i)}
                                 onFocus={() => setActive(i)}
                                 onClick={() => setOpen(i)}
-                                data-cursor="Open"
                                 className={`grid w-full grid-cols-12 items-baseline gap-4 border-b border-ink px-2 py-4 text-left transition-colors duration-200 md:py-5 ${
                                     on ? "bg-ink text-lime" : ""
                                 }`}
@@ -101,7 +109,6 @@ export function IndexList() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={() => setOpen(null)}
-                        data-cursor="Close"
                         data-lenis-prevent
                     >
                         <div className="label flex justify-between pt-16">

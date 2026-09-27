@@ -13,7 +13,7 @@ export default function Home() {
             <IndexList />
             <Swarm />
             <Tobago />
-            <Footer />
+            <Footer pixels={false} />
         </>
     )
 }
