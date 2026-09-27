@@ -1,15 +1,16 @@
 "use client"
 
-import { AnimatePresence, motion, useMotionValue, useSpring } from "motion/react"
-import { useEffect, useState } from "react"
+import { motion, useMotionValue, useSpring } from "motion/react"
+import { startTransition, useEffect, useState, ViewTransition } from "react"
+import { Lightbox, workTransitionName } from "@/components/custom/lightbox"
 import { ScrollShape } from "@/components/custom/shapes"
-import { WORKS } from "@/lib/works"
+import type { Work } from "@/lib/works"
 
 /*
  * The one place the home page lists the work. Hovering a row shows that
  * row's piece following the cursor; clicking opens it full size.
  */
-export function IndexList() {
+export function IndexList({ works: WORKS }: { works: Work[] }) {
     const [active, setActive] = useState<number | null>(null)
     const [open, setOpen] = useState<number | null>(null)
     const x = useMotionValue(0)
@@ -25,20 +26,26 @@ export function IndexList() {
         return () => window.removeEventListener("scroll", clear)
     }, [])
 
+    // The preview stays mounted on the last hovered piece so it can hand its
+    // image to the viewer (and take it back) through a shared transition name.
+    const [last, setLast] = useState<number | null>(null)
+    const [instant, setInstant] = useState(false)
     useEffect(() => {
-        if (open === null) return
-        const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(null)
-        window.addEventListener("keydown", onKey)
-        return () => window.removeEventListener("keydown", onKey)
-    }, [open])
-
-    const current = active !== null ? WORKS[active] : null
-    const opened = open !== null ? WORKS[open] : null
+        if (active !== null) setLast(active)
+    }, [active])
+    const preview = last !== null ? WORKS[last] : null
+    const visible = active !== null && open === null
 
     return (
         <section className="px-4 pb-32 md:px-6">
             <header className="relative mb-8 grid grid-cols-12 items-end gap-4 border-t border-ink pt-3">
-                <ScrollShape name="orb" color="#0c0c0b" turns={-540} className="bottom-[-1vw] right-[3vw] hidden w-[13vw] md:block" wobble={false} />
+                <ScrollShape
+                    name="orb"
+                    color="#0c0c0b"
+                    turns={-540}
+                    className="bottom-[-1vw] right-[3vw] hidden w-[13vw] md:block"
+                    wobble={false}
+                />
                 <span className="label relative col-span-12 md:col-span-3">(02) — Work, {WORKS.length} pieces</span>
                 <h2 className="display relative col-span-12 text-[12vw] md:col-span-9 md:text-[7vw]">Index</h2>
             </header>
@@ -57,10 +64,13 @@ export function IndexList() {
                         <li key={w.id}>
                             <button
                                 type="button"
-                                onPointerEnter={() => setActive(i)}
+                                onPointerEnter={() => {
+                                    setInstant(false)
+                                    setActive(i)
+                                }}
                                 onPointerMove={() => active !== i && setActive(i)}
                                 onFocus={() => setActive(i)}
-                                onClick={() => setOpen(i)}
+                                onClick={() => startTransition(() => setOpen(i))}
                                 className={`grid w-full grid-cols-12 items-baseline gap-4 border-b border-ink px-2 py-4 text-left transition-colors duration-200 md:py-5 ${
                                     on ? "bg-ink text-lime" : ""
                                 }`}
@@ -85,53 +95,44 @@ export function IndexList() {
                 className="pointer-events-none fixed left-0 top-0 z-40 hidden md:block"
                 style={{ x: sx, y: sy }}
             >
-                <AnimatePresence>
-                    {current && (
-                        <motion.img
-                            key={current.id}
-                            src={current.src}
-                            alt=""
-                            className="absolute left-6 top-0 w-[22vw] max-w-[340px] -translate-y-1/2 object-cover shadow-2xl"
-                            initial={{ opacity: 0, scale: 0.85, rotate: -4 }}
-                            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
-                            transition={{ type: "spring", stiffness: 320, damping: 26 }}
-                        />
-                    )}
-                </AnimatePresence>
+                {preview &&
+                    (() => {
+                        const img = (
+                            <motion.img
+                                key={preview.id}
+                                src={preview.src}
+                                alt=""
+                                className={`absolute left-6 top-0 w-[22vw] max-w-[340px] -translate-y-1/2 object-cover shadow-2xl ${
+                                    visible ? "opacity-100" : "opacity-0"
+                                } ${instant || open !== null ? "" : "transition-opacity duration-150"}`}
+                                initial={instant ? false : { scale: 0.85, rotate: -4 }}
+                                animate={{ scale: 1, rotate: 0 }}
+                                transition={{ type: "spring", stiffness: 320, damping: 26 }}
+                            />
+                        )
+                        // Only the visible preview mounts a named wrapper, so opening
+                        // unmounts it (pairing with the viewer) and closing remounts it.
+                        return visible ? (
+                            <ViewTransition name={workTransitionName(preview.id)} share="morph" default="none">
+                                {img}
+                            </ViewTransition>
+                        ) : (
+                            img
+                        )
+                    })()}
             </motion.div>
 
-            <AnimatePresence>
-                {opened && (
-                    <motion.div
-                        className="fixed inset-0 z-[70] flex flex-col bg-ink/95 p-4 text-paper backdrop-blur md:p-6"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setOpen(null)}
-                        data-lenis-prevent
-                    >
-                        <div className="label flex justify-between pt-16">
-                            <span>
-                                {String((open ?? 0) + 1).padStart(2, "0")} — {opened.kind}, {opened.year}
-                            </span>
-                            <span>Esc / click to close</span>
-                        </div>
-                        <div className="flex min-h-0 flex-1 items-center justify-center py-6">
-                            <motion.img
-                                key={opened.id}
-                                src={opened.src}
-                                alt={opened.title}
-                                className="max-h-full max-w-full object-contain"
-                                initial={{ scale: 0.92, y: 20 }}
-                                animate={{ scale: 1, y: 0 }}
-                                transition={{ type: "spring", stiffness: 200, damping: 24 }}
-                            />
-                        </div>
-                        <h3 className="display text-[7vw] md:text-[3.5vw]">{opened.title}</h3>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            <Lightbox
+                works={WORKS}
+                index={open}
+                onChange={setOpen}
+                onClose={() => {
+                    // Bring the preview back, instantly, as the landing spot.
+                    setInstant(true)
+                    setLast(open)
+                    setActive(open)
+                }}
+            />
         </section>
     )
 }

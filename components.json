@@ -22,6 +22,7 @@
   "menuColor": "default",
   "menuAccent": "subtle",
   "registries": {
-    "@atelier": "https://www.atelier-ui.com/r/{name}.json"
+    "@atelier": "https://www.atelier-ui.com/r/{name}.json",
+    "@ja3dan": "https://gw.jaedan.me/r/{name}.json"
   }
 }

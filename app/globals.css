@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@ja3dan/tokens/theme.css";
 
 @theme inline {
     --color-ink: #0c0c0b;
@@ -201,7 +202,70 @@ html.lenis body {
 
 @media (prefers-reduced-motion: reduce) {
     .float,
+    .blink,
     .grain::after {
         animation: none;
     }
+}
+
+/* ---- view transitions: thumbnail <-> viewer morph ---- */
+/* The pair is the same artwork, so skip the crossfade (it dims mid-flight)
+   and let the new snapshot carry the whole morph. */
+::view-transition-group(.morph) {
+    animation-duration: 520ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+::view-transition-old(.morph) {
+    animation: none;
+    opacity: 0;
+}
+::view-transition-new(.morph) {
+    animation: none;
+    height: 100%;
+    object-fit: cover;
+}
+/* Backdrop and captions ride the page crossfade. */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 320ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
+    }
+}
+
+/* ================================================================ studio ===
+ * The admin wears the site's clothes: paper, ink, lime, Monument and mono.
+ */
+/* In base, so utilities (sizes, fonts) on a field still win. */
+@layer base {
+    .studio input,
+    .studio textarea,
+    .studio select {
+        font: inherit;
+        letter-spacing: inherit;
+        outline: none;
+    }
+    .studio input::placeholder,
+    .studio textarea::placeholder {
+        color: color-mix(in oklab, currentColor 50%, transparent);
+    }
+}
+.studio :focus-visible {
+    outline: 2px solid var(--focus, var(--ink));
+    outline-offset: 2px;
+}
+/* On ink the ink ring measures 1:1, so it turns lime (15.8:1). */
+.studio .on-ink,
+.studio.on-ink {
+    --focus: var(--lime);
+}
+.studio input[type="color"] {
+    -webkit-appearance: none;
+    appearance: none;
 }
