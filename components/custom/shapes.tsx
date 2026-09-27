@@ -7,8 +7,10 @@
  * lags, overshoots and settles instead of tracking the wheel 1:1.
  */
 
+import { useReducedMotion } from "@/hooks/use-reduced-motion"
 import { motion, useScroll, useSpring, useTransform, useVelocity } from "motion/react"
 import type { CSSProperties } from "react"
+import { INK, PINK_SOFT } from "@/lib/palette"
 
 type ShapeName = "burst" | "orb" | "sparkle" | "flower" | "asterisk"
 
@@ -112,8 +114,8 @@ type ScrollShapeProps = {
 
 export function ScrollShape({
     name,
-    color = "#ff8fc0",
-    stroke = "#0c0c0b",
+    color = PINK_SOFT,
+    stroke = INK,
     className,
     style,
     turns = 540,
@@ -125,13 +127,15 @@ export function ScrollShape({
     const rotate = useSpring(raw, { stiffness: 55, damping: 9, mass: 1.1 })
     const velocity = useSpring(useVelocity(scrollY), { stiffness: 200, damping: 30 })
     const scale = useTransform(velocity, [-4000, 0, 4000], wobble ? [0.88, 1, 0.88] : [1, 1, 1])
+    // Under reduced motion the shapes hold still.
+    const still = useReducedMotion()
 
     return (
         <motion.svg
             aria-hidden
             viewBox="-4 -4 208 208"
             className={`pointer-events-none absolute select-none ${className ?? ""}`}
-            style={{ rotate, scale, ...style }}
+            style={still ? style : { rotate, scale, ...style }}
         >
             <Art name={name} color={color} stroke={stroke} />
         </motion.svg>

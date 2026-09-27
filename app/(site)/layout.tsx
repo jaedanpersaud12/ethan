@@ -10,12 +10,19 @@ export const revalidate = 3600
 
 export default function SiteLayout({ children }: LayoutProps<"/">) {
     return (
-        <div className="grain">
+        // #site goes inert while the lightbox (portaled outside it) is open.
+        <div id="site" className="grain">
+            <a
+                href="#main"
+                className="label sr-only rounded-full bg-lime px-4 py-3 text-ink focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60]"
+            >
+                Skip to content
+            </a>
             <SmoothScroll options={{ lerp: 0.09 }}>
                 <WebglProvider>
                     <PixelTransition>
                         <Nav />
-                        <main>{children}</main>
+                        <main id="main">{children}</main>
                     </PixelTransition>
                 </WebglProvider>
             </SmoothScroll>

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react"
 import { startTransition, useMemo, useState, ViewTransition } from "react"
 import { Lightbox, workTransitionName } from "@/components/custom/lightbox"
 import type { Work } from "@/lib/works"
+import { workAlt } from "@/lib/seo"
 
 // Fold the specific kinds into a few filters people actually scan by.
 const GROUP: Record<string, string> = {
@@ -97,10 +98,10 @@ function Tile({ work, index, open, onOpen }: { work: Work; index: number; open: 
                 <span className="block size-full transition-transform duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] group-hover:scale-[1.04]">
                     {/* The open piece's tile unmounts its wrapper; the viewer's mounts. */}
                     {open ? (
-                        <img src={work.src} alt={work.title} className="size-full object-cover" />
+                        <img src={work.src} alt={workAlt(work)} className="size-full object-cover" />
                     ) : (
                         <ViewTransition name={workTransitionName(work.id)} share="morph" default="none">
-                            <img src={work.src} alt={work.title} loading="lazy" className="size-full object-cover" />
+                            <img src={work.src} alt={workAlt(work)} loading="lazy" className="size-full object-cover" />
                         </ViewTransition>
                     )}
                 </span>

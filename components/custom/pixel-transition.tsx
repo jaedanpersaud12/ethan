@@ -21,12 +21,13 @@ import {
     useRef,
     useState,
 } from "react"
+import { LILAC, LIME, PINK, SUN, TEAL } from "@/lib/palette"
 
 type Phase = "idle" | "cover" | "reveal"
-const ACCENTS = ["#dcf26b", "#c9a2ff", "#ff5fae", "#1fb58f", "#f4d35e"]
+const ACCENTS = [LIME, LILAC, PINK, TEAL, SUN]
 const COVER_MS = 1000
 const REVEAL_MS = 900
-const LABELS: Record<string, string> = { "/": "Index", "/archive": "Archive", "/about": "About" }
+const LABELS: Record<string, string> = { "/": "Work", "/archive": "Archive", "/about": "About" }
 
 const NavCtx = createContext<(href: string) => void>(() => {})
 
@@ -41,6 +42,8 @@ export function PixelTransition({ children }: { children: ReactNode }) {
     const [grid, setGrid] = useState({ cols: 16, rows: 10 })
     const pending = useRef<string | null>(null)
     const busy = useRef(true)
+    // Reduced motion: no intro, no wipe; links navigate straight away.
+    const reduced = useRef(false)
 
     useEffect(() => {
         const size = () => {
@@ -74,6 +77,13 @@ export function PixelTransition({ children }: { children: ReactNode }) {
 
     // Intro: count to 100 while the cover holds, then reveal.
     useEffect(() => {
+        reduced.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        if (reduced.current) {
+            setPhase("idle")
+            setIntro(false)
+            busy.current = false
+            return
+        }
         let raf = 0
         const start = performance.now()
         const tick = (now: number) => {
@@ -96,6 +106,10 @@ export function PixelTransition({ children }: { children: ReactNode }) {
     const navigate = useCallback(
         (href: string) => {
             if (busy.current || href === pathname) return
+            if (reduced.current) {
+                router.push(href)
+                return
+            }
             busy.current = true
             pending.current = href
             setLabel(LABELS[href] ?? href)
@@ -131,6 +145,7 @@ export function PixelTransition({ children }: { children: ReactNode }) {
             {children}
             <div
                 data-phase={phase}
+                data-intro={intro && phase === "cover" ? "" : undefined}
                 aria-hidden
                 className="pointer-events-none fixed inset-0 z-[80] grid"
                 style={{
@@ -147,7 +162,6 @@ export function PixelTransition({ children }: { children: ReactNode }) {
                             {
                                 "--d": `${(cell.d * (phase === "reveal" ? REVEAL_MS - 450 : COVER_MS - 500)).toFixed(0)}ms`,
                                 "--c": cell.c,
-                                ...(intro && phase === "cover" ? { opacity: 1, animation: "none" } : {}),
                             } as React.CSSProperties
                         }
                     />
@@ -155,7 +169,7 @@ export function PixelTransition({ children }: { children: ReactNode }) {
             </div>
             <div
                 aria-hidden
-                className="pointer-events-none fixed inset-0 z-[81] flex items-end justify-between p-5 text-paper transition-opacity duration-300 md:p-8"
+                className="pointer-events-none fixed inset-0 z-[81] flex flex-col-reverse items-start justify-start gap-2 p-5 text-paper transition-opacity duration-300 motion-reduce:hidden md:flex-row md:items-end md:justify-between md:p-8"
                 style={{ opacity: phase === "cover" ? 1 : 0 }}
             >
                 <span className="label">
@@ -165,7 +179,7 @@ export function PixelTransition({ children }: { children: ReactNode }) {
                         {intro ? "ethanol" : label}
                     </span>
                 </span>
-                {intro && <span className="display text-[16vw] leading-none md:text-[10vw]">{count}</span>}
+                {intro && <span className="display text-[16vw] leading-none tabular-nums md:text-[10vw]">{count}</span>}
             </div>
         </NavCtx.Provider>
     )

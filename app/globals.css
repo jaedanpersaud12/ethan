@@ -2,23 +2,32 @@
 @import "@ja3dan/tokens/theme.css";
 
 @theme inline {
-    --color-ink: #0c0c0b;
-    --color-paper: #ecE9e1;
-    --color-lime: #dcf26b;
-    --color-lilac: #c9a2ff;
-    --color-pink: #ff5fae;
-    --color-teal: #1fb58f;
-    --color-sun: #f4d35e;
+    --color-ink: var(--ink);
+    --color-paper: var(--paper);
+    --color-lime: var(--lime);
+    --color-lilac: var(--lilac);
+    --color-pink: var(--pink);
+    --color-pink-soft: var(--pink-soft);
+    --color-teal: var(--teal);
+    --color-sun: var(--sun);
+    --color-graphite: var(--graphite);
     --font-display: var(--font-monument), "Arial Black", sans-serif;
     --font-mono: var(--font-jb), ui-monospace, monospace;
     --font-serif: var(--font-instrument), Georgia, serif;
     --font-sans: var(--font-jb), ui-monospace, monospace;
 }
 
+/* The palette, defined once. lib/palette.ts mirrors it for canvas and SVG. */
 :root {
     --ink: #0c0c0b;
     --paper: #ece9e1;
     --lime: #dcf26b;
+    --lilac: #c9a2ff;
+    --pink: #ff5fae;
+    --pink-soft: #ff8fc0;
+    --teal: #1fb58f;
+    --sun: #f4d35e;
+    --graphite: #2a2a27;
 }
 
 html {
@@ -87,28 +96,36 @@ html.lenis body {
 }
 
 /* ---- text roll (hand-built take on Atelier's pro Text Roll) ---- */
-.roll {
-    display: inline-flex;
-    overflow: clip;
-    line-height: 1;
-}
-.roll > span {
-    display: inline-flex;
-    flex-direction: column;
-    transition: transform 0.55s cubic-bezier(0.7, 0, 0.2, 1);
-    transition-delay: calc(var(--i) * 22ms);
-    white-space: pre;
-}
-.roll > span > span:last-child {
-    position: absolute;
-    transform: translateY(100%);
-}
-.roll > span {
-    position: relative;
-}
-.group:hover .roll > span,
-.roll:hover > span {
-    transform: translateY(-100%);
+/* In a layer so utilities (e.g. max-sm:hidden) on a roll still win. */
+@layer components {
+    /* Visual only; selecting or copying picks up the sr-only text instead. */
+    .roll {
+        user-select: none;
+        display: inline-flex;
+        overflow: clip;
+        line-height: 1;
+    }
+    .roll > span {
+        display: inline-flex;
+        flex-direction: column;
+        transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1);
+        transition-delay: calc(var(--i) * 10ms);
+        white-space: pre;
+    }
+    .roll > span > span:last-child {
+        position: absolute;
+        transform: translateY(100%);
+    }
+    .roll > span {
+        position: relative;
+    }
+    /* Gated so the roll doesn't latch after a tap on touch screens. */
+    @media (hover: hover) {
+        .group:hover .roll > span,
+        .roll:hover > span {
+            transform: translateY(-100%);
+        }
+    }
 }
 
 /* ---- pixel transition cells ---- */
@@ -124,6 +141,11 @@ html.lenis body {
     opacity: 1;
     animation: px-out 0.45s steps(1, end) forwards;
     animation-delay: var(--d);
+}
+/* First load: the cover starts solid and holds while the counter runs. */
+[data-intro] .px-cell {
+    opacity: 1;
+    animation: none;
 }
 @keyframes px-in {
     0% {
@@ -205,6 +227,14 @@ html.lenis body {
     .blink,
     .grain::after {
         animation: none;
+    }
+    /* No pixel wipe: route changes cut straight over. */
+    [data-phase] .px-cell {
+        animation: none;
+        opacity: 0;
+    }
+    .roll > span {
+        transition: none;
     }
 }
 

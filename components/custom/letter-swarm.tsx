@@ -5,8 +5,10 @@
  * scattered, gather into a line as the section pins, then blow apart again.
  */
 
+import { useReducedMotion } from "@/hooks/use-reduced-motion"
 import { type MotionValue, motion, useScroll, useSpring, useTransform } from "motion/react"
 import { useMemo, useRef } from "react"
+import { LIME, PAPER, PINK } from "@/lib/palette"
 
 type Scatter = { x: number; y: number; r: number; s: number; x2: number; y2: number; r2: number }
 
@@ -30,6 +32,8 @@ export function LetterSwarm({
     const ref = useRef<HTMLDivElement>(null)
     const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] })
     const progress = useSpring(scrollYProgress, { stiffness: 90, damping: 22, mass: 0.4 })
+    // Under reduced motion the words sit assembled; nothing flies in or out.
+    const still = useReducedMotion()
 
     const scatter = useMemo(() => {
         const rand = seeded(7)
@@ -54,7 +58,7 @@ export function LetterSwarm({
                 {lines.map((line, li) => (
                     <div key={li} aria-hidden className="display relative flex text-[11vw] md:text-[9vw]">
                         {Array.from(line).map((ch, i) => (
-                            <Letter key={i} ch={ch} s={scatter[li][i]} progress={progress} />
+                            <Letter key={i} ch={ch} s={scatter[li][i]} progress={progress} still={still} />
                         ))}
                     </div>
                 ))}
@@ -63,13 +67,14 @@ export function LetterSwarm({
     )
 }
 
-function Letter({ ch, s, progress }: { ch: string; s: Scatter; progress: MotionValue<number> }) {
+function Letter({ ch, s, progress, still }: { ch: string; s: Scatter; progress: MotionValue<number>; still: boolean }) {
     const stops = [0, 0.38, 0.62, 1]
     const x = useTransform(progress, stops, [`${s.x}vw`, "0vw", "0vw", `${s.x2}vw`])
     const y = useTransform(progress, stops, [`${s.y}vh`, "0vh", "0vh", `${s.y2}vh`])
     const rotate = useTransform(progress, stops, [s.r, 0, 0, s.r2])
     const scale = useTransform(progress, stops, [s.s, 1, 1, s.s * 0.6])
-    const color = useTransform(progress, [0.3, 0.4, 0.6, 0.7], ["#ecE9e1", "#dcf26b", "#dcf26b", "#ff5fae"])
+    const color = useTransform(progress, [0.3, 0.4, 0.6, 0.7], [PAPER, LIME, LIME, PINK])
+    if (still) return <span className="inline-block text-lime">{ch === " " ? " " : ch}</span>
     return (
         <motion.span className="inline-block will-change-transform" style={{ x, y, rotate, scale, color }}>
             {ch === " " ? " " : ch}

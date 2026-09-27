@@ -1,10 +1,11 @@
 "use client"
 
-import { motion } from "motion/react"
+import { animate, motion } from "motion/react"
 import { useRouter } from "next/navigation"
-import { useEffect, useId, useRef, useState, useTransition } from "react"
+import { useEffect, useId, useLayoutEffect, useRef, useState, useTransition } from "react"
 import { deleteWorks, discardUpload, saveWork, type WorkInput } from "@/app/admin/actions"
 import { ArtworkField } from "@/components/admin/artwork-field"
+import { TonePicker } from "@/components/admin/tone-picker"
 import type { WorkRow } from "@/lib/catalog"
 import { COLLECTIONS, type Collection } from "@/lib/works"
 
@@ -256,36 +257,15 @@ export function Editor({
                             onChange={(v) => set("collection", v)}
                         />
                         <Row label="Tone" htmlFor={`${id}-tone`} hint="Sampled from the image. Used as the piece’s accent.">
-                            <span className="flex items-center gap-3">
-                                <label
-                                    className="relative block size-7 shrink-0 cursor-pointer rounded-full border border-ink focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink"
-                                    style={{ background: form.tone }}
-                                >
-                                    <input
-                                        type="color"
-                                        value={/^#[0-9a-f]{6}$/i.test(form.tone) ? form.tone : "#000000"}
-                                        onChange={(e) => {
-                                            toneTouched.current = true
-                                            set("tone", e.target.value.toUpperCase())
-                                        }}
-                                        className="absolute inset-0 cursor-pointer opacity-0"
-                                        aria-label="Pick the tone from a colour picker"
-                                    />
-                                </label>
-                                <input
-                                    id={`${id}-tone`}
-                                    value={form.tone}
-                                    onChange={(e) => {
-                                        toneTouched.current = true
-                                        set("tone", e.target.value.toUpperCase())
-                                    }}
-                                    maxLength={7}
-                                    autoComplete="off"
-                                    spellCheck={false}
-                                    {...invalid("tone")}
-                                    className={`${FIELD} uppercase tabular-nums`}
-                                />
-                            </span>
+                            <TonePicker
+                                value={form.tone}
+                                onChange={(hex) => {
+                                    toneTouched.current = true
+                                    set("tone", hex)
+                                }}
+                                inputId={`${id}-tone`}
+                                invalid={invalid("tone")}
+                            />
                         </Row>
                         <Row label="Price" htmlFor={`${id}-price`} hint="Whole Trinidad and Tobago dollars. Leave empty if it’s not for sale.">
                             <span className="flex items-baseline gap-1">
@@ -439,6 +419,33 @@ function Choice<T extends string>({
     hint?: string
     warn?: boolean
 }) {
+    const track = useRef<HTMLSpanElement>(null)
+    const pill = useRef<HTMLSpanElement>(null)
+    const placed = useRef(false)
+
+    // Clips the pill to the chosen option: instantly on mount and resize, with the spring on a change.
+    useLayoutEffect(() => {
+        const t = track.current
+        const p = pill.current
+        if (!t || !p) return
+        const place = (animated: boolean) => {
+            const el = t.querySelector<HTMLElement>(`[data-value="${value}"]`)
+            if (!el) return
+            const bottom = t.clientHeight - el.offsetTop - el.offsetHeight
+            const right = t.clientWidth - el.offsetLeft - el.offsetWidth
+            const clipPath = `inset(${el.offsetTop}px ${right}px ${bottom}px ${el.offsetLeft}px round 9999px)`
+            const still = !animated || matchMedia("(prefers-reduced-motion: reduce)").matches
+            animate(p, { clipPath }, still ? { duration: 0 } : SPRING)
+        }
+        place(placed.current)
+        placed.current = true
+        // It fires once on observe, which would cut the spring short.
+        let first = true
+        const observer = new ResizeObserver(() => (first ? (first = false) : place(false)))
+        observer.observe(t)
+        return () => observer.disconnect()
+    }, [value])
+
     return (
         <fieldset className="grid grid-cols-12 gap-x-4 gap-y-1 border-b border-ink/15 px-5 py-3.5">
             <legend className="sr-only">{legend}</legend>
@@ -446,29 +453,33 @@ function Choice<T extends string>({
                 {legend}
             </span>
             <div className="col-span-8 md:col-span-9">
-                <span className="inline-flex gap-1 rounded-full border border-ink p-0.5">
-                    {options.map((o) => {
-                        const on = o.value === value
-                        return (
-                            <label
-                                key={o.value}
-                                className={`label relative min-h-8 cursor-pointer rounded-full px-3 py-1.5 transition-colors has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink ${
-                                    on ? "text-lime" : "hover:bg-ink/10"
-                                }`}
-                            >
-                                <input
-                                    type="radio"
-                                    name={name}
-                                    value={o.value}
-                                    checked={on}
-                                    onChange={() => onChange(o.value)}
-                                    className="sr-only"
-                                />
-                                {on && <motion.span layoutId={name} className="absolute inset-0 rounded-full bg-ink" transition={SPRING} />}
-                                <span className="relative">{o.label}</span>
-                            </label>
-                        )
-                    })}
+                <span ref={track} className="relative inline-flex gap-1 rounded-full border border-ink p-0.5">
+                    {options.map((o) => (
+                        <label
+                            key={o.value}
+                            data-value={o.value}
+                            className="label min-h-8 cursor-pointer rounded-full px-3 py-1.5 transition-colors hover:bg-ink/10 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink"
+                        >
+                            <input
+                                type="radio"
+                                name={name}
+                                value={o.value}
+                                checked={o.value === value}
+                                onChange={() => onChange(o.value)}
+                                className="sr-only"
+                            />
+                            {o.label}
+                        </label>
+                    ))}
+                    {/* The same labels in lime on ink, clipped to the chosen one. The clip slides, so text
+                        is never lime on paper or ink on ink mid-move, whatever the scroll or the panel is doing. */}
+                    <span ref={pill} aria-hidden className="pointer-events-none absolute inset-0 flex gap-1 rounded-full bg-ink p-0.5 text-lime">
+                        {options.map((o) => (
+                            <span key={o.value} className="label min-h-8 rounded-full px-3 py-1.5">
+                                {o.label}
+                            </span>
+                        ))}
+                    </span>
                 </span>
                 {hint && (
                     <p className={`mt-1.5 text-[12px] leading-[1.45] text-pretty ${warn ? "inline-block bg-pink px-1.5 py-0.5" : "opacity-70"}`}>{hint}</p>

@@ -1,9 +1,11 @@
 "use client"
 
+import { useReducedMotion } from "@/hooks/use-reduced-motion"
 import { motion, useMotionValue, useSpring } from "motion/react"
 import { startTransition, useEffect, useState, ViewTransition } from "react"
 import { Lightbox, workTransitionName } from "@/components/custom/lightbox"
 import { ScrollShape } from "@/components/custom/shapes"
+import { INK } from "@/lib/palette"
 import type { Work } from "@/lib/works"
 
 /*
@@ -17,6 +19,7 @@ export function IndexList({ works: WORKS }: { works: Work[] }) {
     const y = useMotionValue(0)
     const sx = useSpring(x, { stiffness: 300, damping: 30, mass: 0.5 })
     const sy = useSpring(y, { stiffness: 300, damping: 30, mass: 0.5 })
+    const reduced = useReducedMotion()
 
     // Scrolling moves the list out from under a still pointer without a
     // pointerleave, so drop the preview on scroll; moving re-activates it.
@@ -41,13 +44,16 @@ export function IndexList({ works: WORKS }: { works: Work[] }) {
             <header className="relative mb-8 grid grid-cols-12 items-end gap-4 border-t border-ink pt-3">
                 <ScrollShape
                     name="orb"
-                    color="#0c0c0b"
+                    color={INK}
                     turns={-540}
                     className="bottom-[-1vw] right-[3vw] hidden w-[13vw] md:block"
                     wobble={false}
                 />
-                <span className="label relative col-span-12 md:col-span-3">(02) — Work, {WORKS.length} pieces</span>
-                <h2 className="display relative col-span-12 text-[12vw] md:col-span-9 md:text-[7vw]">Index</h2>
+                <span className="label relative col-span-12 md:col-span-3">
+                    (02) — Work, {WORKS.length} {WORKS.length === 1 ? "piece" : "pieces"}
+                </span>
+                {/* No larger than the h1, so the outline reads top-down. */}
+                <h2 className="display relative col-span-12 text-[9vw] md:col-span-9 md:text-[6.2vw]">Index</h2>
             </header>
 
             <ul
@@ -64,6 +70,7 @@ export function IndexList({ works: WORKS }: { works: Work[] }) {
                         <li key={w.id}>
                             <button
                                 type="button"
+                                aria-haspopup="dialog"
                                 onPointerEnter={() => {
                                     setInstant(false)
                                     setActive(i)
@@ -71,7 +78,7 @@ export function IndexList({ works: WORKS }: { works: Work[] }) {
                                 onPointerMove={() => active !== i && setActive(i)}
                                 onFocus={() => setActive(i)}
                                 onClick={() => startTransition(() => setOpen(i))}
-                                className={`grid w-full grid-cols-12 items-baseline gap-4 border-b border-ink px-2 py-4 text-left transition-colors duration-200 md:py-5 ${
+                                className={`grid w-full grid-cols-12 items-baseline gap-4 border-b border-ink px-2 py-4 text-left transition-colors duration-150 md:py-5 ${
                                     on ? "bg-ink text-lime" : ""
                                 }`}
                             >
@@ -98,14 +105,15 @@ export function IndexList({ works: WORKS }: { works: Work[] }) {
                 {preview &&
                     (() => {
                         const img = (
+                            // No key: moving between rows swaps the src in place
+                            // instead of replaying the entrance spring every time.
                             <motion.img
-                                key={preview.id}
                                 src={preview.src}
                                 alt=""
-                                className={`absolute left-6 top-0 w-[22vw] max-w-[340px] -translate-y-1/2 object-cover shadow-2xl ${
+                                className={`absolute left-6 top-0 w-[22vw] max-w-[340px] -translate-y-1/2 object-cover shadow-2xl outline outline-1 -outline-offset-1 outline-black/10 ${
                                     visible ? "opacity-100" : "opacity-0"
                                 } ${instant || open !== null ? "" : "transition-opacity duration-150"}`}
-                                initial={instant ? false : { scale: 0.85, rotate: -4 }}
+                                initial={instant || reduced ? false : { scale: 0.85, rotate: -4 }}
                                 animate={{ scale: 1, rotate: 0 }}
                                 transition={{ type: "spring", stiffness: 320, damping: 26 }}
                             />

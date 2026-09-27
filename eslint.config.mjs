@@ -9,6 +9,7 @@ const eslintConfig = defineConfig([
     files: [
       "**/components/{webgl-provider,webgl-portal,webgl-image,webgl-video,webgl-scene,liquid-media,curve-media,lens-media,sphere-gallery,fluid-distortion,pixelated-text,text-scramble,text-bounce,text-split,infinite-gallery,image-trail,pixel-trail,scattered-scroll,pixel-scroll,magnetic-dot-grid,edge-bounce,smooth-scroll}/**",
       "**/components/custom/**",
+      "**/components/interior/**",
       "**/components/sections/**",
       "**/hooks/use-{dom-plane,pointer-uv,render,frame-loop}.ts",
       "**/lib/object-fit.ts",

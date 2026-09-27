@@ -83,7 +83,7 @@ export function About() {
                         <LiquidMedia
                             type="image"
                             src="/ethan.png"
-                            alt="Illustrated self-portrait of Ethan throwing up a peace sign"
+                            alt="Illustrated self-portrait of Ethan Z. Lalla, Trinidad graphic designer, throwing up a peace sign"
                             className="mx-auto h-[70vh] w-auto object-contain"
                             intensity={0.35}
                             radius={16}
